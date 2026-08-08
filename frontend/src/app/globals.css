@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+/* Custom variant: matches when the html element carries data-theme="dark" */
+@custom-variant theme-dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ============================================================
+   Junction — design tokens
+   Palette: warm paper + ink + one cobalt accent.
+   Light and dark share the same token names; the `[data-theme]`
+   overrides below swap the values so every utility flips with
+   zero extra classes.
+   ============================================================ */
+
+@theme {
+  /* Surfaces */
+  --color-paper: #f7f5f0; /* page background */
+  --color-surface: #ffffff; /* cards, inputs, raised panels */
+  --color-band: #1b1a18; /* dark ink panels (hero, CTA) */
+  --color-band-ink: #f7f5f0; /* text on ink panels */
+  --color-band-muted: #b3ada1; /* secondary text on ink panels */
+
+  /* Text */
+  --color-ink: #1b1a18; /* primary text */
+  --color-ink-soft: #33302a; /* slightly softer text */
+  --color-muted: #6e6a61; /* secondary text */
+
+  /* Lines */
+  --color-line: #e6e2d9; /* borders, dividers */
+  --color-line-strong: #d4cfc3;
+
+  /* Accent — cobalt, single accent for the whole product */
+  --color-accent: #2547f4;
+  --color-accent-hover: #1c3bd8;
+  --color-accent-ink: #ffffff; /* text placed ON the accent */
+
+  /* Status — functional colors for application states */
+  --color-ok: #16703f;
+  --color-warn: #a35c00;
+  --color-bad: #b02a2a;
+
+  /* Fonts (wired to next/font in layout.js) */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Dark mode — same token names, different values.
+   Unlayered rules win over Tailwind's layered :root theme, so
+   these override reliably without `!important`. */
+[data-theme="dark"] {
+  --color-paper: #131211;
+  --color-surface: #1d1b18;
+  --color-band: #211f1b; /* slightly lighter than paper for depth */
+  --color-band-ink: #f1efe9;
+  --color-band-muted: #a29c90;
+
+  --color-ink: #f1efe9;
+  --color-ink-soft: #d8d4ca;
+  --color-muted: #a29c90;
+
+  --color-line: #2c2924;
+  --color-line-strong: #3b372f;
+
+  --color-accent: #8a9aff; /* lightened for contrast on dark */
+  --color-accent-hover: #a3b0ff;
+  --color-accent-ink: #12141d; /* dark text on the light cobalt */
+
+  --color-ok: #3fbf77;
+  --color-warn: #e0a43e;
+  --color-bad: #f07171;
+}
+
+/* Native controls (scrollbars, form widgets) follow the theme */
+html {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+}
+
+/* ============================================================
+   Component classes — the shape system.
+   One radius rule: cards rounded-2xl, inputs/buttons rounded-lg,
+   chips/pills rounded-full. Applied everywhere, no exceptions.
+   ============================================================ */
+
+@layer components {
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-accent-ink shadow-sm hover:bg-accent-hover;
+  }
+
+  .btn-secondary {
+    @apply border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-ink/[0.03];
+  }
+
+  .btn-ghost {
+    @apply text-ink hover:bg-ink/[0.05];
+  }
+
+  .btn-band {
+    @apply border border-white/20 bg-white/5 text-paper hover:bg-white/10;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink transition placeholder:text-muted/70 focus:border-accent/60 focus:ring-2 focus:ring-accent/40 focus:outline-none;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+
+  .hint {
+    @apply mt-1.5 block text-xs text-muted;
+  }
+
+  .field-error {
+    @apply mt-1.5 block text-xs font-medium text-bad;
+  }
+
+  .card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium;
+  }
+}
+
+/* Entry animation used on the landing hero (transform + opacity only) */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Skeleton shimmer */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+/* Respect users who ask for less motion */
+@media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .skeleton {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

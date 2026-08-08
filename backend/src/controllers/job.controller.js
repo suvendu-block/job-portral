@@ -33,8 +33,15 @@ function isOwner(job, user) {
 
 // --- GET /api/jobs  (public — anyone can browse jobs) -------
 // Supports search: ?q=react&location=remote&type=contract
+// Supports pagination: ?page=2&limit=10 (defaults: page=1, limit=10, max 50)
 export const getJobs = asyncHandler(async (req, res) => {
   const { q, location, type } = req.query;
+
+  // Sanitize pagination params (also rejects NaN from parseInt)
+  const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
+
   const filter = {};
 
   // Keyword search: match against title, company OR description
@@ -60,12 +67,25 @@ export const getJobs = asyncHandler(async (req, res) => {
     filter.type = type;
   }
 
-  const jobs = await Job.find(filter)
-    .sort({ createdAt: -1 }) // newest first
-    .populate('postedBy', 'name email') // include the poster's name/email
-    .lean(); // plain objects — faster, no need to mutate documents
+  // Run the page query and the total count in parallel
+  const [jobs, total] = await Promise.all([
+    Job.find(filter)
+      .sort({ createdAt: -1 }) // newest first
+      .skip(skip)
+      .limit(limit)
+      .populate('postedBy', 'name email') // include the poster's name/email
+      .lean(), // plain objects — faster, no need to mutate documents
+    Job.countDocuments(filter),
+  ]);
 
-  res.json({ success: true, count: jobs.length, jobs });
+  res.json({
+    success: true,
+    count: jobs.length, // how many came back on this page
+    total, // how many matched overall
+    page,
+    pages: Math.max(1, Math.ceil(total / limit)),
+    jobs,
+  });
 });
 
 // --- GET /api/jobs/:id  (public) --------

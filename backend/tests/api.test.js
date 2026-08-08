@@ -220,6 +220,41 @@ test('job detail returns 404 for unknown id, 400 for malformed id', async () => 
   assert.equal(malformed.body.error.code, 'INVALID_ID');
 });
 
+test('pagination: page/limit/total/pages and defaults', async () => {
+  const agent = await registerAgent('recruiter', recruiter);
+  for (let i = 0; i < 3; i += 1) {
+    await agent.post('/api/jobs').send({ ...validJob, title: `Job Number ${i + 1}` });
+  }
+
+  // Defaults: page 1, limit 10
+  const page1 = await request(app).get('/api/jobs');
+  assert.equal(page1.status, 200);
+  assert.equal(page1.body.count, 3);
+  assert.equal(page1.body.total, 3);
+  assert.equal(page1.body.page, 1);
+  assert.equal(page1.body.pages, 1);
+
+  // limit=2 -> two pages
+  const limited = await request(app).get('/api/jobs?limit=2');
+  assert.equal(limited.body.count, 2);
+  assert.equal(limited.body.total, 3);
+  assert.equal(limited.body.page, 1);
+  assert.equal(limited.body.pages, 2);
+  assert.equal(limited.body.jobs[0].title, 'Job Number 3'); // newest first
+
+  // page=2 returns the remainder
+  const page2 = await request(app).get('/api/jobs?limit=2&page=2');
+  assert.equal(page2.body.count, 1);
+  assert.equal(page2.body.jobs[0].title, 'Job Number 1');
+
+  // Garbage params fall back to defaults, oversized limit clamps to 50
+  const garbage = await request(app).get('/api/jobs?page=abc&limit=9999');
+  assert.equal(garbage.status, 200);
+  assert.equal(garbage.body.page, 1);
+  assert.equal(garbage.body.pages, 1);
+  assert.equal(garbage.body.count, 3);
+});
+
 test('recruiter can edit only their own jobs', async () => {
   const bob = await registerAgent('recruiter', recruiter);
   const eve = await registerAgent('recruiter', otherRecruiter);
