@@ -6,6 +6,7 @@ import { env } from './config/env.js';
 import authRoutes from './routes/auth.routes.js';
 import jobRoutes from './routes/job.routes.js';
 import applicationRoutes from './routes/application.routes.js';
+import profileRoutes from './routes/profile.routes.js';
 import { notFound } from './middlewares/notFound.middleware.js';
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api', applicationRoutes);
+app.use('/api/profile', profileRoutes);
 
 // --- Error handling (must be last) ---------
 

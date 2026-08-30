@@ -19,6 +19,7 @@ import { connectDB, disconnectDB } from '../src/config/db.js';
 import User from '../src/models/User.js';
 import Job from '../src/models/Job.js';
 import Application from '../src/models/Application.js';
+import Profile from '../src/models/Profile.js';
 
 validateEnv();
 
@@ -241,10 +242,61 @@ async function main() {
     }
   }
 
+  // 4. Seed profiles for demo users
+  const profiles = [
+    {
+      email: 'priya@example.com',
+      bio: 'Full-stack developer with 4 years of experience building web applications. Passionate about clean code and great user experiences.',
+      skills: ['JavaScript', 'React', 'Node.js', 'Python', 'PostgreSQL', 'Tailwind CSS'],
+      experience: [
+        { title: 'Frontend Developer', company: 'TechStart Inc', location: 'San Francisco, CA', from: 'Mar 2023', to: 'Present', description: 'Built and maintained React-based dashboard used by 10k+ daily active users.' },
+        { title: 'Junior Developer', company: 'WebWorks Studio', location: 'Remote', from: 'Jun 2021', to: 'Feb 2023', description: 'Developed responsive websites and internal tools for small business clients.' },
+      ],
+      education: [
+        { school: 'University of California, Berkeley', degree: 'B.S.', field: 'Computer Science', from: 'Sep 2017', to: 'May 2021' },
+      ],
+      links: { website: '', linkedin: 'https://linkedin.com/in/priyasharma', github: 'https://github.com/priyasharma' },
+    },
+    {
+      email: 'tom@example.com',
+      bio: 'Backend engineer focused on distributed systems and APIs. Loves open source and mentoring new developers.',
+      skills: ['Go', 'Python', 'Docker', 'Kubernetes', 'AWS', 'gRPC', 'Redis'],
+      experience: [
+        { title: 'Backend Engineer', company: 'CloudBase Systems', location: 'Seattle, WA', from: 'Jan 2022', to: 'Present', description: 'Designed and maintained microservices handling 5M+ requests per day.' },
+      ],
+      education: [
+        { school: 'University of Washington', degree: 'B.S.', field: 'Computer Engineering', from: 'Sep 2016', to: 'Jun 2020' },
+      ],
+      links: { website: '', linkedin: 'https://linkedin.com/in/tombecker', github: 'https://github.com/tombecker' },
+    },
+    {
+      email: 'ines@example.com',
+      bio: 'Data analyst turned full-stack developer. Strong in SQL, Python, and turning messy data into clear insights.',
+      skills: ['Python', 'SQL', 'Pandas', 'React', 'Tableau', 'Excel'],
+      experience: [
+        { title: 'Data Analyst', company: 'DataViz Corp', location: 'New York, NY', from: 'Aug 2022', to: 'Present', description: 'Built automated reporting dashboards and ETL pipelines.' },
+      ],
+      education: [
+        { school: 'NYU', degree: 'B.A.', field: 'Statistics', from: 'Sep 2018', to: 'May 2022' },
+      ],
+      links: { website: '', linkedin: 'https://linkedin.com/in/inesduarte', github: '' },
+    },
+  ];
+
+  let profilesCreated = 0;
+  for (const p of profiles) {
+    const user = await User.findOne({ email: p.email });
+    if (!user) continue;
+    const exists = await Profile.exists({ user: user._id });
+    if (exists) continue;
+    await Profile.create({ user: user._id, bio: p.bio, skills: p.skills, experience: p.experience, education: p.education, links: p.links });
+    profilesCreated += 1;
+  }
+
   const total = await Job.countDocuments();
   console.log(`[seed] jobs created: ${created}, skipped (already exist): ${skipped}`);
   console.log(`[seed] total jobs in database: ${total}`);
-  console.log(`[seed] users: ${await User.countDocuments()}, applications: ${await Application.countDocuments()}`);
+  console.log(`[seed] users: ${await User.countDocuments()}, applications: ${await Application.countDocuments()}, profiles: ${profilesCreated} new`);
   console.log('[seed] demo logins (password: secret123):');
   console.log('  recruiters:', RECRUITERS.map((r) => r.email).join(', '));
   console.log('  seekers   :', SEEKERS.map((s) => s.email).join(', '));

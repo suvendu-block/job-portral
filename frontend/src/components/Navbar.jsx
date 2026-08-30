@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { List, X, SignOut, UserCircle } from "@phosphor-icons/react";
+import { List, X, SignOut, UserCircle, IdentificationCard } from "@phosphor-icons/react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth, dashboardPathFor } from "@/context/AuthContext";
@@ -48,6 +48,15 @@ export function Navbar() {
           className={navLink(pathname.startsWith("/dashboard"))}
         >
           Dashboard
+        </Link>
+      )}
+      {user && (
+        <Link
+          href="/profile"
+          onClick={close}
+          className={navLink(pathname === "/profile")}
+        >
+          Profile
         </Link>
       )}
     </>
